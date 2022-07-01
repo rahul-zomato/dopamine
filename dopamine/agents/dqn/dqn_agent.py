@@ -30,6 +30,7 @@ from dopamine.replay_memory import circular_replay_buffer
 import numpy as np
 import tensorflow as tf
 
+tf.compat.v1.disable_v2_behavior()
 import gin.tf
 
 
@@ -95,9 +96,9 @@ class DQNAgent(object):
                eval_mode=False,
                use_staging=True,
                max_tf_checkpoints_to_keep=4,
-               optimizer=tf.train.RMSPropOptimizer(
+               optimizer=tf.keras.optimizers.RMSprop(
                    learning_rate=0.00025,
-                   decay=0.95,
+                   rho=0.95,
                    momentum=0.0,
                    epsilon=0.00001,
                    centered=True),
@@ -147,20 +148,20 @@ class DQNAgent(object):
         (for instance, only the network parameters).
     """
     assert isinstance(observation_shape, tuple)
-    tf.logging.info('Creating %s agent with the following parameters:',
+    tf.compat.v1.logging.info('Creating %s agent with the following parameters:',
                     self.__class__.__name__)
-    tf.logging.info('\t gamma: %f', gamma)
-    tf.logging.info('\t update_horizon: %f', update_horizon)
-    tf.logging.info('\t min_replay_history: %d', min_replay_history)
-    tf.logging.info('\t update_period: %d', update_period)
-    tf.logging.info('\t target_update_period: %d', target_update_period)
-    tf.logging.info('\t epsilon_train: %f', epsilon_train)
-    tf.logging.info('\t epsilon_eval: %f', epsilon_eval)
-    tf.logging.info('\t epsilon_decay_period: %d', epsilon_decay_period)
-    tf.logging.info('\t tf_device: %s', tf_device)
-    tf.logging.info('\t use_staging: %s', use_staging)
-    tf.logging.info('\t optimizer: %s', optimizer)
-    tf.logging.info('\t max_tf_checkpoints_to_keep: %d',
+    tf.compat.v1.logging.info('\t gamma: %f', gamma)
+    tf.compat.v1.logging.info('\t update_horizon: %f', update_horizon)
+    tf.compat.v1.logging.info('\t min_replay_history: %d', min_replay_history)
+    tf.compat.v1.logging.info('\t update_period: %d', update_period)
+    tf.compat.v1.logging.info('\t target_update_period: %d', target_update_period)
+    tf.compat.v1.logging.info('\t epsilon_train: %f', epsilon_train)
+    tf.compat.v1.logging.info('\t epsilon_eval: %f', epsilon_eval)
+    tf.compat.v1.logging.info('\t epsilon_decay_period: %d', epsilon_decay_period)
+    tf.compat.v1.logging.info('\t tf_device: %s', tf_device)
+    tf.compat.v1.logging.info('\t use_staging: %s', use_staging)
+    tf.compat.v1.logging.info('\t optimizer: %s', optimizer)
+    tf.compat.v1.logging.info('\t max_tf_checkpoints_to_keep: %d',
                     max_tf_checkpoints_to_keep)
 
     self.num_actions = num_actions
@@ -190,7 +191,7 @@ class DQNAgent(object):
       # The last axis indicates the number of consecutive frames stacked.
       state_shape = (1,) + self.observation_shape + (stack_size,)
       self.state = np.zeros(state_shape)
-      self.state_ph = tf.placeholder(self.observation_dtype, state_shape,
+      self.state_ph = tf.compat.v1.placeholder(self.observation_dtype, state_shape,
                                      name='state_ph')
       self._replay = self._build_replay_buffer(use_staging)
 
@@ -201,9 +202,9 @@ class DQNAgent(object):
 
     if self.summary_writer is not None:
       # All tf.summaries should have been defined prior to running this.
-      self._merged_summaries = tf.summary.merge_all()
+      self._merged_summaries = tf.compat.v1.summary.merge_all()
     self._sess = sess
-    self._saver = tf.train.Saver(max_to_keep=max_tf_checkpoints_to_keep)
+    self._saver = tf.compat.v1.train.Saver(max_to_keep=max_tf_checkpoints_to_keep)
 
     # Variables to be initialized by the agent once it interacts with the
     # environment.
@@ -322,10 +323,10 @@ class DQNAgent(object):
     """
     # Get trainable variables from online and target DQNs
     sync_qt_ops = []
-    trainables_online = tf.get_collection(
-        tf.GraphKeys.TRAINABLE_VARIABLES, scope='Online')
-    trainables_target = tf.get_collection(
-        tf.GraphKeys.TRAINABLE_VARIABLES, scope='Target')
+    trainables_online = tf.compat.v1.get_collection(
+        tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope='Online')
+    trainables_target = tf.compat.v1.get_collection(
+        tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope='Target')
     for (w_online, w_target) in zip(trainables_online, trainables_target):
       # Assign weights from online to target network.
       sync_qt_ops.append(w_target.assign(w_online, use_locking=True))
@@ -488,7 +489,7 @@ class DQNAgent(object):
       A dict containing additional Python objects to be checkpointed by the
         experiment. If the checkpoint directory does not exist, returns None.
     """
-    if not tf.gfile.Exists(checkpoint_dir):
+    if not tf.io.gfile.exists(checkpoint_dir):
       return None
     # Call the Tensorflow saver to checkpoint the graph.
     self._saver.save(
@@ -528,7 +529,7 @@ class DQNAgent(object):
       if not self.allow_partial_reload:
         # If we don't allow partial reloads, we will return False.
         return False
-      tf.logging.warning('Unable to reload replay buffer!')
+      tf.compat.v1.logging.warning('Unable to reload replay buffer!')
     if bundle_dictionary is not None:
       for key in self.__dict__:
         if key in bundle_dictionary:
@@ -536,7 +537,7 @@ class DQNAgent(object):
     elif not self.allow_partial_reload:
       return False
     else:
-      tf.logging.warning("Unable to reload the agent's parameters!")
+      tf.compat.v1.logging.warning("Unable to reload the agent's parameters!")
     # Restore the agent's TensorFlow graph.
     self._saver.restore(self._sess,
                         os.path.join(checkpoint_dir,
