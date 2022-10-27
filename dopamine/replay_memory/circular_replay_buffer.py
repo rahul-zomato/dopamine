@@ -253,7 +253,7 @@ class OutOfGraphReplayBuffer(object):
         extra_storage_types.
     """
     self._check_add_types(observation, action, reward, terminal, *args)
-    if self.is_empty() or self._store['terminal'][self.cursor() - 1] == 1:
+    if self.is_empty() or self._store['terminal'][self.cursor() - 1] >= 1:
       for _ in range(self._stack_size - 1):
         # Child classes can rely on the padding transitions being filled with
         # zeros. This is useful when there is a priority argument.

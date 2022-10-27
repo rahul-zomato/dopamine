@@ -291,7 +291,7 @@ class DQNAgent(object):
     #          (or) 0 if S_t is a terminal state,
     # and
     #   N is the update horizon (by default, N=1).
-    return self._replay.rewards + self.cumulative_gamma * replay_next_qt_max * (
+    return self._replay.rewards + self.cumulative_gamma * replay_next_qt_max * tf.math.abs(
         1. - tf.cast(self._replay.terminals, tf.float32))
 
   def _build_train_op(self):
