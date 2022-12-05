@@ -53,7 +53,7 @@ import pickle
 import gin
 import tensorflow as tf
 
-CHECKPOINT_DURATION = 4
+CHECKPOINT_DURATION = 4000
 
 
 @gin.configurable

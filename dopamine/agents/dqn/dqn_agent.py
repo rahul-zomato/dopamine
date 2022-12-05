@@ -95,7 +95,7 @@ class DQNAgent(object):
                tf_device='/cpu:*',
                eval_mode=False,
                use_staging=True,
-               max_tf_checkpoints_to_keep=4,
+               max_tf_checkpoints_to_keep=40000,
                optimizer=tf.keras.optimizers.RMSprop(
                    learning_rate=0.00025,
                    rho=0.95,
